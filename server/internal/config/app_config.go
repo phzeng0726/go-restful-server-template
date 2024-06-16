@@ -13,7 +13,7 @@ const (
 	keyHost              = "HOST"
 	keyPort              = "PORT"
 	keyAccessAllowOrigin = "ACCESS_ALLOW_ORIGIN"
-	keyDatabasePath      = "SQLALCHEMY_DATABASE_URI"
+	keyDatabaseDSN       = "DATABASE_DSN"
 	keyLogFolderPath     = "LOG_FOLDER_PATH"
 )
 
@@ -22,11 +22,11 @@ type AppConfig struct {
 	Host              string
 	Port              string
 	AccessAllowOrigin string
+	DatabaseDSN       string
 	DataPath          *DataPathConfig
 }
 
 type DataPathConfig struct {
-	Database  string
 	LogFolder string
 }
 
@@ -36,8 +36,8 @@ func InitConfig() {
 		Host:              os.Getenv(keyHost),
 		Port:              os.Getenv(keyPort),
 		AccessAllowOrigin: os.Getenv(keyAccessAllowOrigin),
+		DatabaseDSN:       os.Getenv(keyDatabaseDSN),
 		DataPath: &DataPathConfig{
-			Database:  os.Getenv(keyDatabasePath),
 			LogFolder: os.Getenv(keyLogFolderPath),
 		},
 	}

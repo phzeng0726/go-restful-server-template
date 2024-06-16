@@ -7,7 +7,6 @@ import (
 	"github.com/phzeng0726/go-server-template/internal/database"
 	"github.com/phzeng0726/go-server-template/internal/repository"
 	"github.com/phzeng0726/go-server-template/internal/service"
-	"github.com/phzeng0726/go-server-template/pkg/auth"
 	"github.com/phzeng0726/go-server-template/pkg/logger"
 
 	delivery "github.com/phzeng0726/go-server-template/internal/delivery/http"
@@ -24,15 +23,15 @@ var (
 )
 
 func initServiceDeps(repos *repository.Repositories, loggerManager logger.LoggerManager) service.Deps {
-	tokenManager, err := auth.NewManager(nil, "./public.pem")
-	if err != nil {
-		log.Fatalln(err)
-	}
+	// tokenManager, err := auth.NewManager(nil, "./public.pem")
+	// if err != nil {
+	// 	log.Fatalln(err)
+	// }
 
 	deps := service.Deps{
 		Repos:         repos,
 		LoggerManager: loggerManager,
-		TokenManager:  tokenManager,
+		// TokenManager:  tokenManager,
 	}
 
 	return deps
@@ -41,7 +40,7 @@ func initServiceDeps(repos *repository.Repositories, loggerManager logger.Logger
 func init() {
 	config.InitConfig()
 
-	loggerManager, err := logger.NewManager("go_hw_tool", config.Env.Env, config.Env.DataPath.LogFolder)
+	loggerManager, err := logger.NewManager("your_server_name_for_logger", config.Env.Env, config.Env.DataPath.LogFolder)
 	if err != nil {
 		log.Fatalln(err)
 	}
@@ -53,7 +52,6 @@ func init() {
 	// Database
 	conn := database.Connect(loggerManager.GetLogger())
 	database.SyncDatabase(conn)
-	database.ReleaseSpaceInDatabase(conn)
 
 	// Others
 	repos = repository.NewRepositories(conn)
