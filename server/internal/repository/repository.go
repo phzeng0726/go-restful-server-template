@@ -8,16 +8,17 @@ import (
 	"gorm.io/gorm"
 )
 
-type Automations interface {
-	GetAutomationByParam(ctx context.Context, projectName string, autoType string) ([]domain.Automation, error)
+type Users interface {
+	CreateUser(ctx context.Context, user domain.User) error
+	GetUserByEmail(ctx context.Context, email string) (domain.User, error)
 }
 
 type Repositories struct {
-	Automations Automations
+	Users Users
 }
 
 func NewRepositories(db *gorm.DB) *Repositories {
 	return &Repositories{
-		Automations: NewAutomationsRepo(db),
+		Users: NewUsersRepo(db),
 	}
 }

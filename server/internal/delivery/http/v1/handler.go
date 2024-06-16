@@ -21,7 +21,6 @@ func NewHandler(services *service.Services, tokenManager auth.TokenManager) *Han
 	}
 }
 
-// 獲取呼叫api的用戶id並轉成字串
 func (h *Handler) getUserIdByCtx(c *gin.Context) (string, error) {
 	userId := c.Value("userId")
 
@@ -36,6 +35,6 @@ func (h *Handler) getUserIdByCtx(c *gin.Context) (string, error) {
 func (h *Handler) Init(api *gin.RouterGroup) {
 	v1 := api.Group("/v1")
 	{
-		h.initAutomationRoutes(v1)
+		h.initUserRoutes(v1)
 	}
 }

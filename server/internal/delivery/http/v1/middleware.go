@@ -14,7 +14,6 @@ import (
 const (
 	authorizationHeader = "Authorization"
 	userCtx             = "userId"
-	manageCtx           = "manage"
 )
 
 // 接受的格式是 Bearer jwt
@@ -47,7 +46,6 @@ func userIdentityMiddleware(h *Handler) gin.HandlerFunc {
 		}
 
 		c.Set(userCtx, claims.UserId)
-		c.Set(manageCtx, claims.Manage)
 		c.Next()
 	}
 }

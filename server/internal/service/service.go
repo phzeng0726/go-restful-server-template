@@ -9,17 +9,22 @@ import (
 	"github.com/phzeng0726/go-server-template/pkg/logger"
 )
 
-type QueryAutomationsInput struct {
-	Project string
-	Type    string
+type CreateUserInput struct {
+	Name  string
+	Email string
 }
 
-type Automations interface {
-	GetIdByParam(ctx context.Context, input QueryAutomationsInput) (domain.Automation, error)
+type QueryUsersInput struct {
+	Email string
+}
+
+type Users interface {
+	CreateUser(ctx context.Context, input CreateUserInput) error
+	GetUserByEmail(ctx context.Context, input QueryUsersInput) (domain.User, error)
 }
 
 type Services struct {
-	Automations Automations
+	Users Users
 }
 
 type Deps struct {
@@ -29,12 +34,12 @@ type Deps struct {
 }
 
 func NewServices(deps Deps) *Services {
-	automationsService := NewAutomationsService(
-		deps.Repos.Automations,
+	UsersService := NewUsersService(
+		deps.Repos.Users,
 		deps.LoggerManager,
 	)
 
 	return &Services{
-		Automations: automationsService,
+		Users: UsersService,
 	}
 }

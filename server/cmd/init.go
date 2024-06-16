@@ -7,6 +7,7 @@ import (
 	"github.com/phzeng0726/go-server-template/internal/database"
 	"github.com/phzeng0726/go-server-template/internal/repository"
 	"github.com/phzeng0726/go-server-template/internal/service"
+	"github.com/phzeng0726/go-server-template/pkg/auth"
 	"github.com/phzeng0726/go-server-template/pkg/logger"
 
 	delivery "github.com/phzeng0726/go-server-template/internal/delivery/http"
@@ -23,15 +24,15 @@ var (
 )
 
 func initServiceDeps(repos *repository.Repositories, loggerManager logger.LoggerManager) service.Deps {
-	// tokenManager, err := auth.NewManager(nil, "./public.pem")
-	// if err != nil {
-	// 	log.Fatalln(err)
-	// }
+	tokenManager, err := auth.NewManager(nil, "./public.pem")
+	if err != nil {
+		log.Fatalln(err)
+	}
 
 	deps := service.Deps{
 		Repos:         repos,
 		LoggerManager: loggerManager,
-		// TokenManager:  tokenManager,
+		TokenManager:  tokenManager,
 	}
 
 	return deps

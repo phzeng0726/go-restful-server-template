@@ -23,8 +23,8 @@ func Connect(logger *zap.Logger) *gorm.DB {
 
 // 確保DB和Model的格式對的上
 func SyncDatabase(conn *gorm.DB) {
-	err := conn.AutoMigrate(&domain.VacuumInfo{})
+	err := conn.AutoMigrate(&domain.User{})
 	if err != nil {
-		log.Fatalf("Failed to migrate VacuumInfo: %v", err)
+		log.Fatalf("Failed to migrate User: %v", err)
 	}
 }
