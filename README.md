@@ -20,3 +20,15 @@ github.com/dgrijalva/jwt-go
 github.com/joho/godotenv
 go.uber.org/zap
 ```
+
+### Prepare
+
+- `.env`
+  ```
+  ENV="development"
+  HOST=0.0.0.0
+  PORT=8080
+  ACCESS_ALLOW_ORIGIN="*"
+  DATABASE_DSN="host=<host> port=<port> user=<user> password=<password> dbname=<dbname> sslmode=disable"
+  LOG_FOLDER_PATH=<local_path>
+  ```
