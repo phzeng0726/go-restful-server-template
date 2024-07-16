@@ -1,9 +1,12 @@
 package http
 
 import (
+	"net"
 	"strings"
+	"time"
 
 	"github.com/gin-contrib/cors"
+	"github.com/gin-gonic/gin"
 	"github.com/phzeng0726/go-server-template/internal/config"
 )
 
@@ -20,4 +23,44 @@ func corsMiddleware() cors.Config {
 	corsConfig.AllowCredentials = true
 
 	return corsConfig
+}
+
+func loggingMiddleware(h *Handler) gin.HandlerFunc {
+	return func(c *gin.Context) {
+		if h.loggerManager == nil {
+			c.Next()
+			return
+		}
+
+		startTime := time.Now()
+
+		// 處理請求
+		c.Next()
+
+		// 請求處理完成後記錄日誌
+		reqMethod := c.Request.Method
+		reqUri := c.Request.RequestURI
+		statusCode := c.Writer.Status()
+
+		var clientIP string = ""
+		host, _, err := net.SplitHostPort(c.Request.RemoteAddr)
+		if err == nil {
+			clientIP = host
+		}
+
+		fields := map[string]interface{}{
+			"method":      reqMethod,
+			"uri":         reqUri,
+			"status_code": statusCode,
+			"ip":          clientIP,
+		}
+
+		go func() {
+			if err := c.Errors.Last(); err != nil {
+				h.loggerManager.ErrorWithElapsedTime(c, "API request failed", startTime, err.Err, fields)
+			} else {
+				h.loggerManager.InfoWithElapsedTime(c, "API request completed", startTime, fields)
+			}
+		}()
+	}
 }

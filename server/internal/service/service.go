@@ -6,7 +6,6 @@ import (
 	"github.com/phzeng0726/go-server-template/internal/domain"
 	"github.com/phzeng0726/go-server-template/internal/repository"
 	"github.com/phzeng0726/go-server-template/pkg/auth"
-	"github.com/phzeng0726/go-server-template/pkg/logger"
 )
 
 type CreateUserInput struct {
@@ -28,15 +27,13 @@ type Services struct {
 }
 
 type Deps struct {
-	Repos         *repository.Repositories
-	LoggerManager logger.LoggerManager
-	TokenManager  auth.TokenManager
+	Repos        *repository.Repositories
+	TokenManager auth.TokenManager
 }
 
 func NewServices(deps Deps) *Services {
 	UsersService := NewUsersService(
 		deps.Repos.Users,
-		deps.LoggerManager,
 	)
 
 	return &Services{

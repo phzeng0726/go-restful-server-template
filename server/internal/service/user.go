@@ -5,22 +5,16 @@ import (
 
 	"github.com/phzeng0726/go-server-template/internal/domain"
 	"github.com/phzeng0726/go-server-template/internal/repository"
-	"github.com/phzeng0726/go-server-template/pkg/logger"
 )
 
 type UsersService struct {
-	repo          repository.Users
-	loggerManager logger.LoggerManager
+	repo repository.Users
 }
 
 func NewUsersService(
-	repo repository.Users,
-	loggerManager logger.LoggerManager,
-
-) *UsersService {
+	repo repository.Users) *UsersService {
 	return &UsersService{
-		repo:          repo,
-		loggerManager: loggerManager,
+		repo: repo,
 	}
 }
 

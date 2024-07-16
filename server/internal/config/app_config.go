@@ -15,6 +15,7 @@ const (
 	keyAccessAllowOrigin = "ACCESS_ALLOW_ORIGIN"
 	keyDatabaseDSN       = "DATABASE_DSN"
 	keyLogFolderPath     = "LOG_FOLDER_PATH"
+	keyDisableLog        = "DISABLE_LOG"
 )
 
 type AppConfig struct {
@@ -24,6 +25,7 @@ type AppConfig struct {
 	AccessAllowOrigin string
 	DatabaseDSN       string
 	DataPath          *DataPathConfig
+	DisableLog        bool
 }
 
 type DataPathConfig struct {
@@ -31,6 +33,12 @@ type DataPathConfig struct {
 }
 
 func InitConfig() {
+	disableLog := os.Getenv(keyDisableLog) == "true"
+	logFolderPath := os.Getenv(keyLogFolderPath)
+	if logFolderPath == "" && !disableLog {
+		logFolderPath = "./log"
+	}
+
 	Env = &AppConfig{
 		Env:               os.Getenv(keyEnv),
 		Host:              os.Getenv(keyHost),
@@ -40,5 +48,6 @@ func InitConfig() {
 		DataPath: &DataPathConfig{
 			LogFolder: os.Getenv(keyLogFolderPath),
 		},
+		DisableLog: disableLog,
 	}
 }
