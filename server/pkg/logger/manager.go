@@ -5,8 +5,10 @@ import (
 	"errors"
 	"fmt"
 	"os"
+	"sort"
 	"time"
 
+	"github.com/rs/xid"
 	"go.uber.org/zap"
 	"go.uber.org/zap/zapcore"
 )
@@ -15,7 +17,6 @@ var globalLogger *zap.Logger
 
 type LoggerManager interface {
 	InitLogger() error
-	GetLogger() *zap.Logger
 	InfoWithElapsedTime(ctx context.Context, action string, startTime time.Time, optionalFields ...map[string]interface{})
 	ErrorWithElapsedTime(ctx context.Context, action string, startTime time.Time, err error, optionalFields ...map[string]interface{})
 }
@@ -30,12 +31,11 @@ func NewManager(appName, env, logFolderPath string) (*Manager, error) {
 	return &Manager{
 		AppName:       appName,
 		Env:           env,
-		LogFolderPath: logFolderPath,
+		LogFolderPath: fmt.Sprintf("%s/%s", logFolderPath, appName),
 	}, nil
 }
 
 func (m *Manager) generateLogFilePath() string {
-
 	envMap := map[string]string{
 		"development":        "dev",
 		"docker-development": "docker_dev",
@@ -51,7 +51,7 @@ func (m *Manager) generateLogFilePath() string {
 	logFileName := fmt.Sprintf("%s_%s_%s.log", m.AppName, env, date)
 	logFilePath := fmt.Sprintf("%s/%s", m.LogFolderPath, logFileName)
 
-	// 資料夾不在的時候會自己創
+	// Create the folder if it doesn't exist
 	if err := os.MkdirAll(m.LogFolderPath, 0755); err != nil {
 		fmt.Printf("failed to create log folder: %v\n", err)
 	}
@@ -60,28 +60,28 @@ func (m *Manager) generateLogFilePath() string {
 }
 
 func (m *Manager) InitLogger() error {
-	// 設定 Encoder
+	// Set Encoder
 	encoderConfig := zap.NewProductionEncoderConfig()
 	encoderConfig.EncodeTime = zapcore.ISO8601TimeEncoder
 
-	// 設定 Writers
+	// Set Writers
 	logFilePath := m.generateLogFilePath()
 
 	file, _ := os.OpenFile(logFilePath, os.O_APPEND|os.O_CREATE|os.O_WRONLY, 0644)
 	consoleSyncer := zapcore.AddSync(os.Stdout)
 	fileSyncer := zapcore.AddSync(file)
 
-	// 設定 Core
+	// Set Core
 	core := zapcore.NewTee(
 		zapcore.NewCore(
-			zapcore.NewJSONEncoder(encoderConfig), // 使用JSON
-			consoleSyncer,                         // 輸出到console
-			zapcore.InfoLevel,                     // 日誌級別
+			zapcore.NewJSONEncoder(encoderConfig), // Use JSON
+			consoleSyncer,                         // Output to console
+			zapcore.InfoLevel,                     // Log level
 		),
 		zapcore.NewCore(
-			zapcore.NewJSONEncoder(encoderConfig), // 使用JSON
-			fileSyncer,                            // 輸出到檔案
-			zapcore.InfoLevel,                     // 日誌級別
+			zapcore.NewJSONEncoder(encoderConfig), // Use JSON
+			fileSyncer,                            // Output to file
+			zapcore.InfoLevel,                     // Log level
 		),
 	)
 
@@ -92,12 +92,29 @@ func (m *Manager) InitLogger() error {
 	return nil
 }
 
-func (m *Manager) GetLogger() *zap.Logger {
-	return globalLogger
+// Convert to the format required by the logger and sort it, putting log_id first
+func getSortedZapField(fields map[string]interface{}) []zapcore.Field {
+	zapFields := make([]zapcore.Field, 0, len(fields))
+	if logID, exists := fields["log_id"]; exists {
+		zapFields = append(zapFields, zap.Any("log_id", logID))
+		delete(fields, "log_id") // Remove log_id from the map to avoid adding it again
+	}
+
+	// Sort and add the remaining fields
+	keys := make([]string, 0, len(fields))
+	for k := range fields {
+		keys = append(keys, k)
+	}
+	sort.Strings(keys)
+
+	for _, k := range keys {
+		zapFields = append(zapFields, zap.Any(k, fields[k]))
+	}
+
+	return zapFields
 }
 
-// 用來記錄log用
-func (m *Manager) getUserIdByCtx(ctx context.Context) (string, error) {
+func getUserIdByCtx(ctx context.Context) (string, error) {
 	userId := ctx.Value("userId")
 
 	userIdStr, ok := userId.(string)
@@ -108,36 +125,36 @@ func (m *Manager) getUserIdByCtx(ctx context.Context) (string, error) {
 	return userIdStr, nil
 }
 
-func (m *Manager) logWithElapsedTime(ctx context.Context, startTime time.Time, optionalFields ...map[string]interface{}) []zapcore.Field {
+func logWithElapsedTime(ctx context.Context, startTime time.Time, optionalFields ...map[string]interface{}) []zapcore.Field {
+	logID := xid.New().String()
+
 	fields := make(map[string]interface{})
+	fields["log_id"] = logID
+
 	if len(optionalFields) > 0 {
 		for k, v := range optionalFields[0] {
 			fields[k] = v
 		}
 	}
 
-	requester, err := m.getUserIdByCtx(ctx)
+	requester, err := getUserIdByCtx(ctx)
 	if err != nil {
 		globalLogger.Error(err.Error())
 	}
 
 	fields["requester"] = requester
 	fields["elapsed_time"] = time.Since(startTime)
-	var zapFields []zap.Field
-	for k, v := range fields {
-		zapFields = append(zapFields, zap.Any(k, v))
-	}
 
-	return zapFields
+	return getSortedZapField(fields)
 }
 
 func (m *Manager) InfoWithElapsedTime(ctx context.Context, action string, startTime time.Time, optionalFields ...map[string]interface{}) {
-	zapFields := m.logWithElapsedTime(ctx, startTime, optionalFields...)
+	zapFields := logWithElapsedTime(ctx, startTime, optionalFields...)
 	globalLogger.Info(action, zapFields...)
 }
 
 func (m *Manager) ErrorWithElapsedTime(ctx context.Context, action string, startTime time.Time, err error, optionalFields ...map[string]interface{}) {
-	zapFields := m.logWithElapsedTime(ctx, startTime, optionalFields...)
+	zapFields := logWithElapsedTime(ctx, startTime, optionalFields...)
 	zapFields = append(zapFields, zap.Any("err", err))
 	globalLogger.Error(action, zapFields...)
 }

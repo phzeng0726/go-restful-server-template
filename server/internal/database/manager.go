@@ -6,22 +6,21 @@ import (
 	"github.com/phzeng0726/go-server-template/internal/config"
 	"github.com/phzeng0726/go-server-template/internal/domain"
 
-	"go.uber.org/zap"
 	"gorm.io/driver/postgres"
 	"gorm.io/gorm"
 )
 
-func Connect(logger *zap.Logger) *gorm.DB {
+func Connect() *gorm.DB {
 	conn, err := gorm.Open(postgres.Open(config.Env.DatabaseDSN), &gorm.Config{})
 	if err != nil {
-		logger.Fatal("Failed to connect database", zap.Error(err))
+		log.Fatalf("Failed to connect database: %v", err)
 	}
 
-	logger.Info("Database connected")
+	log.Println("Database connected")
 	return conn
 }
 
-// 確保DB和Model的格式對的上
+// Ensure that the database and model formats match
 func SyncDatabase(conn *gorm.DB) {
 	err := conn.AutoMigrate(&domain.User{})
 	if err != nil {

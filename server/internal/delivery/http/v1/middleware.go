@@ -10,13 +10,13 @@ import (
 	"github.com/gin-gonic/gin"
 )
 
-// NOTE: 本檔案是驗證用的，有過的話代表是受驗證
+// NOTE: This file is for validation purposes. If it passes, it means it is validated.
 const (
 	authorizationHeader = "Authorization"
 	userCtx             = "userId"
 )
 
-// 接受的格式是 Bearer jwt
+// Accepted format is Bearer jwt
 func (h *Handler) parseAuthHeader(c *gin.Context) (auth.CustomMapClaims, error) {
 	header := c.GetHeader(authorizationHeader)
 	if header == "" {
@@ -35,7 +35,7 @@ func (h *Handler) parseAuthHeader(c *gin.Context) (auth.CustomMapClaims, error) 
 	return h.tokenManager.Parse(headerParts[1])
 }
 
-// 驗證，有過才會進到下一層
+// Authentication middleware, proceeds to the next layer if validation passes
 func userIdentityMiddleware(h *Handler) gin.HandlerFunc {
 	return func(c *gin.Context) {
 		claims, err := h.parseAuthHeader(c)
