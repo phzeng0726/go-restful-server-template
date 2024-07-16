@@ -28,7 +28,8 @@ type Manager struct {
 func NewManager(privateKeyPath *string, publicKeyPath string) (*Manager, error) {
 	var privateKey *rsa.PrivateKey
 	var err error
-	// 私鑰只有Auth server有
+
+	// Only the Auth server has the private key
 	if privateKeyPath != nil && *privateKeyPath != "" {
 		privateKey, err = parsePrivateKey(*privateKeyPath)
 		if err != nil {
@@ -95,7 +96,7 @@ func (m *Manager) NewJWT(ttl time.Duration, userId string, manage *string) (stri
 		manageStr = *manage
 	}
 
-	// 通常StandardClaims是用sub，不過因為old peacock用的是user_id，所以改成MapClaims
+	// Usually StandardClaims uses "sub", but since the old Peacock uses "user_id", we use MapClaims instead
 	token := jwt.NewWithClaims(jwt.SigningMethodRS256, jwt.MapClaims{
 		"exp":     time.Now().Add(ttl).Unix(),
 		"user_id": userId,

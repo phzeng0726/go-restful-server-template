@@ -20,7 +20,7 @@ func Connect() *gorm.DB {
 	return conn
 }
 
-// 確保DB和Model的格式對的上
+// Ensure that the database and model formats match
 func SyncDatabase(conn *gorm.DB) {
 	err := conn.AutoMigrate(&domain.User{})
 	if err != nil {

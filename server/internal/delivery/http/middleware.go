@@ -34,10 +34,10 @@ func loggingMiddleware(h *Handler) gin.HandlerFunc {
 
 		startTime := time.Now()
 
-		// 處理請求
+		// Process the request
 		c.Next()
 
-		// 請求處理完成後記錄日誌
+		// Log the request after processing is completed
 		reqMethod := c.Request.Method
 		reqUri := c.Request.RequestURI
 		statusCode := c.Writer.Status()
