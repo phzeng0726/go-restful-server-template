@@ -1,4 +1,4 @@
-# go-server-template
+# go-restful-server-template
 
 ## Dependencies
 
