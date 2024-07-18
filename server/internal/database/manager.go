@@ -3,15 +3,14 @@ package database
 import (
 	"log"
 
-	"github.com/phzeng0726/go-server-template/internal/config"
 	"github.com/phzeng0726/go-server-template/internal/domain"
 
-	"gorm.io/driver/postgres"
+	"gorm.io/driver/sqlite"
 	"gorm.io/gorm"
 )
 
 func Connect() *gorm.DB {
-	conn, err := gorm.Open(postgres.Open(config.Env.DatabaseDSN), &gorm.Config{})
+	conn, err := gorm.Open(sqlite.Open("gorm.db"), &gorm.Config{})
 	if err != nil {
 		log.Fatalf("Failed to connect database: %v", err)
 	}
