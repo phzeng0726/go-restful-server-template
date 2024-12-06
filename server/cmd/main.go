@@ -7,7 +7,6 @@ import (
 	"github.com/phzeng0726/go-server-template/internal/database"
 	"github.com/phzeng0726/go-server-template/internal/repository"
 	"github.com/phzeng0726/go-server-template/internal/service"
-	"github.com/phzeng0726/go-server-template/pkg/auth"
 	"github.com/phzeng0726/go-server-template/pkg/logger"
 
 	delivery "github.com/phzeng0726/go-server-template/internal/delivery/http"
@@ -37,14 +36,15 @@ func initLogger(configEnv config.AppConfig) logger.LoggerManager {
 }
 
 func initServiceDeps(repos *repository.Repositories, configEnv config.AppConfig) service.Deps {
-	tokenManager, err := auth.NewManager(nil, "./public.pem")
-	if err != nil {
-		log.Fatalln(err)
-	}
+	// // Necessary if using token manager
+	// tokenManager, err := auth.NewManager(nil, "./public.pem")
+	// if err != nil {
+	// 	log.Fatalln(err)
+	// }
 
 	deps := service.Deps{
-		Repos:        repos,
-		TokenManager: tokenManager,
+		Repos: repos,
+		// TokenManager: tokenManager,
 	}
 
 	log.Printf("Current environment: %v", configEnv.Env)

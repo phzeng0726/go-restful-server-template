@@ -18,7 +18,11 @@ type Handler struct {
 	loggerManager logger.LoggerManager
 }
 
-func NewHandler(services *service.Services, tokenManager auth.TokenManager, loggerManager logger.LoggerManager) *Handler {
+func NewHandler(
+	services *service.Services,
+	tokenManager auth.TokenManager,
+	loggerManager logger.LoggerManager,
+) *Handler {
 	return &Handler{
 		services:      services,
 		tokenManager:  tokenManager,

@@ -15,7 +15,7 @@ import (
 
 // TokenManager provides logic for JWT & Refresh tokens generation and parsing.
 type TokenManager interface {
-	NewJWT(ttl time.Duration, userId string, manage *string) (string, error)
+	NewJWT(ttl time.Duration, userId string) (string, error)
 	Parse(accessToken string) (CustomMapClaims, error)
 	NewRefreshToken() (string, error)
 }
@@ -28,8 +28,7 @@ type Manager struct {
 func NewManager(privateKeyPath *string, publicKeyPath string) (*Manager, error) {
 	var privateKey *rsa.PrivateKey
 	var err error
-
-	// Only the Auth server has the private key
+	// 私鑰只有Auth server有
 	if privateKeyPath != nil && *privateKeyPath != "" {
 		privateKey, err = parsePrivateKey(*privateKeyPath)
 		if err != nil {
@@ -88,19 +87,11 @@ func parsePublicKey(publicKeyPath string) (*rsa.PublicKey, error) {
 	return rsaPubKey, nil
 }
 
-func (m *Manager) NewJWT(ttl time.Duration, userId string, manage *string) (string, error) {
-	var manageStr string
-	if manage == nil {
-		manageStr = "na"
-	} else {
-		manageStr = *manage
-	}
-
-	// Usually StandardClaims uses "sub", but since the old Peacock uses "user_id", we use MapClaims instead
+func (m *Manager) NewJWT(ttl time.Duration, userId string) (string, error) {
+	// 通常StandardClaims是用sub，不過因為old peacock用的是user_id，所以改成MapClaims
 	token := jwt.NewWithClaims(jwt.SigningMethodRS256, jwt.MapClaims{
-		"exp":     time.Now().Add(ttl).Unix(),
+		"exp":     time.Now().UTC().Add(ttl).Unix(),
 		"user_id": userId,
-		"manage":  manageStr,
 	})
 
 	return token.SignedString(m.signingKey)
@@ -116,26 +107,23 @@ func (m *Manager) Parse(accessToken string) (CustomMapClaims, error) {
 		return m.verifyKey, nil
 	})
 	if err != nil {
-		return respClaims, fmt.Errorf("failed to parse token")
+		if err.Error() == "crypto/rsa: verification error" {
+			return respClaims, errors.New("invalid token")
+		}
+		return respClaims, err
 	}
 
 	claims, ok := token.Claims.(jwt.MapClaims)
 	if !ok {
-		return respClaims, fmt.Errorf("error get user claims from token")
+		return respClaims, errors.New("error get user claims from token")
 	}
 
 	userId, ok := claims["user_id"].(string)
 	if !ok {
-		return respClaims, fmt.Errorf("error converting user_id to string")
-	}
-
-	manage, ok := claims["manage"].(string)
-	if !ok {
-		return respClaims, fmt.Errorf("error converting manage to string")
+		return respClaims, errors.New("error converting user_id to string")
 	}
 
 	respClaims.UserId = userId
-	respClaims.Manage = manage
 
 	return respClaims, nil
 }
